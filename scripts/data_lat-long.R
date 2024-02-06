@@ -33,6 +33,16 @@ IRSL_1 %>%
 rowSums(!is.na(IRSL_full[,c("IRSL_2000","IRSL_2005","IRSL_2010","IRSL_2020")])) -> count
 IRSL_full[count>=2,] -> IRSL
 
+###Localities' points----
+IRSL_1 %>% 
+  rbind(IRSL_2) %>% 
+  mutate(locality_code = as.integer(locality_code)) %>% 
+  left_join(y = dplyr::select(locality_points, locality_code, AMBITO, LAT_DECIMAL, LON_DECIMAL, ALTITUD, TOTAL.DE.VIVIENDAS.HABITADAS),
+            by = "locality_code") %>%
+  rename("viviendas_2020" = "TOTAL.DE.VIVIENDAS.HABITADAS" ) %>%
+  glimpse %>% 
+  write.csv(x = ., file="/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/locality_IRSL_points.csv")
+
 ###land_cover data----
 check_landscape(lc_2010_nad83) #couldn't check. Session aborted in every try
 sample_lsm(landscape = lc_2010_nad83,

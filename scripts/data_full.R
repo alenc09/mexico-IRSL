@@ -32,14 +32,25 @@ apply_code <- function(dataframe) {
   return(list(dataframe = thiessen_LC_))
 }
 
-modified_list <- lapply(list_LC, apply_code)
+lapply(list_LC, apply_code) -> modified_list
 
-modified_list[[1]] %>% 
-  data.frame() %>% glimpse #-> thiessen_LC_2000_wider
-modified_list[[2]] -> thiessen_LC_2005_wider
-modified_list[[3]] -> thiessen_LC_2010_wider
-modified_list[[4]] -> thiessen_LC_2020_wider
+modified_list[[1]][[1]]-> thiessen_LC_2000_wider
+modified_list[[2]][[1]]-> thiessen_LC_2005_wider
+modified_list[[3]][[1]]-> thiessen_LC_2010_wider
+modified_list[[4]][[1]]-> thiessen_LC_2020_wider
 
-thiessen_LC_2000_wider %>% 
-  left_join(thiessen_LC_2005_wider, by = "locality_c") %>% 
+thiessen_all %>% 
+  unite(col = municipality_code, ENTIDAD, MUN, sep = "", remove = F) %>% 
+  mutate(altitud = as.double(ALTITUD),
+         state_code = as.factor(ENTIDAD),
+         municipality_code = as.factor(municipality_code),
+         locality_code = as.factor(locality_c),
+         .keep = "unused") %>% 
+  select(state_code, NOM_ENT, municipality_code, NOM_MUN, locality_code, NOM_LOC,
+         -LOC, -LONGITUD, -LATITUD, x, y, altitud, area_m) %>% 
+  rename(state_name = NOM_ENT,
+         municipality_name = NOM_MUN,
+         locality_name = NOM_LOC,
+         long_dec = x,
+         lat_dec = y) %>% 
   glimpse

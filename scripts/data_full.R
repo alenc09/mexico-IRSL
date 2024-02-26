@@ -5,6 +5,7 @@
 library(sf)
 library(dplyr)
 library(tidyr)
+library(ggplot2)
 
 #data----
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/thissen_all.shp") -> thiessen_all
@@ -12,6 +13,7 @@ read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/thiessen_all_LC_2005.shp") -> thiessen_LC_2005
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/thiessen_all_LC_2010.shp") -> thiessen_LC_2010
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/thiessen_all_LC_2020.shp") -> thiessen_LC_2020
+read.csv("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/localities_points/locality_IRSL_points.csv") -> IRSL_full
 
 ##organization----
 ###land cover----
@@ -53,4 +55,44 @@ thiessen_all %>%
          locality_name = NOM_LOC,
          long_dec = x,
          lat_dec = y) %>% 
+  glimpse -> thiessen_census_2020
+
+thiessen_census_2020 %>% 
+  left_join(x = ., y = thiessen_LC_2000_wider, by = c("locality_code" = "locality_c")) %>% 
+  left_join(y = thiessen_LC_2005_wider, by = c("locality_code" = "locality_c")) %>% 
+  left_join(y = thiessen_LC_2010_wider, by = c("locality_code" = "locality_c")) %>% 
+  left_join(y = thiessen_LC_2020_wider, by = c("locality_code" = "locality_c")) %>% 
+  glimpse -> thiessen_census_2020_LC_00_20
+
+###IRSL----
+IRSL_full %>% 
+  select(-1, -state_name, -municipality_name, -locality_name) %>% 
+  mutate(locality_code = as.factor(locality_code)) %>% 
+  left_join(x = thiessen_census_2020, y =., by = "locality_code") %>%
+  glimpse -> thiessen_census_2020_IRSL
+
+rowSums(!is.na(st_drop_geometry(thiessen_census_2020_IRSL[,c("IRSL_2000","IRSL_2005","IRSL_2010","IRSL_2020")]))) -> count
+
+thiessen_census_2020_IRSL[count>=2,] -> thiessen_census_2020_IRSL_analysis
+thiessen_census_2020_IRSL_analysis %>% 
+  mutate(across(.cols = GRSL_2000:GRSL_2020, .fns = as.factor),
+         AMBITO = as.factor(AMBITO),
+         viviendas_2020 = as.numeric(viviendas_2020)) %>% 
+  select(locality_code, long_dec, lat_dec, pop_2000:pop_2020, AMBITO, viviendas_2020, GRSL_2000:GRSL_2020) %>% 
+  summary()
   glimpse
+
+thiessen_census_2020_IRSL[count<2,] -> thiessen_census_2020_IRSLmiss
+thiessen_census_2020_IRSLmiss %>% 
+  mutate(across(.cols = GRSL_2000:GRSL_2020, .fns = as.factor),
+         AMBITO = as.factor(AMBITO),
+         viviendas_2020 = as.numeric(viviendas_2020)) %>% 
+  select(locality_code, long_dec, lat_dec, pop_2000:pop_2020, AMBITO, viviendas_2020, GRSL_2000:GRSL_2020) %>% 
+  # summarise(by = GRSL_2000:GRSL_2020) %>% 
+  summary()
+  glimpse
+  
+
+ggplot()+
+  geom_bar(data = thiessen_census_2020_IRSL_analysis, aes(x = GRSL_2000, y =)
+           

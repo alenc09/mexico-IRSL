@@ -6,6 +6,8 @@ library(sf)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(writexl)
+library(here)
 
 #data----
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/thissen_all.shp") -> thiessen_all
@@ -14,6 +16,7 @@ read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/thiessen_all_LC_2010.shp") -> thiessen_LC_2010
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/thiessen_all_LC_2020.shp") -> thiessen_LC_2020
 read.csv("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/localities_points/locality_IRSL_points.csv") -> IRSL_full
+read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/thissen_all_ejido.shp") -> thiessen_ejidos
 
 ##organization----
 ###land cover----
@@ -64,6 +67,8 @@ thiessen_census_2020 %>%
   left_join(y = thiessen_LC_2020_wider, by = c("locality_code" = "locality_c")) %>% 
   glimpse -> thiessen_census_2020_LC_00_20
 
+write_xlsx(x = thiessen_census_2020_LC_00_20, path = here("data/thiessen_census_2020_LC_00_20.xlsx"))
+
 ###IRSL----
 IRSL_full %>% 
   select(-1, -state_name, -municipality_name, -locality_name) %>% 
@@ -82,17 +87,19 @@ thiessen_census_2020_IRSL_analysis %>%
   summary()
   glimpse
 
+#### missing localities----  
 thiessen_census_2020_IRSL[count<2,] -> thiessen_census_2020_IRSLmiss
 thiessen_census_2020_IRSLmiss %>% 
   mutate(across(.cols = GRSL_2000:GRSL_2020, .fns = as.factor),
          AMBITO = as.factor(AMBITO),
          viviendas_2020 = as.numeric(viviendas_2020)) %>% 
   select(locality_code, long_dec, lat_dec, pop_2000:pop_2020, AMBITO, viviendas_2020, GRSL_2000:GRSL_2020) %>% 
-  # summarise(by = GRSL_2000:GRSL_2020) %>% 
   summary()
   glimpse
   
-
-ggplot()+
-  geom_bar(data = thiessen_census_2020_IRSL_analysis, aes(x = GRSL_2000, y =)
-           
+###Ejidos----
+thiessen_ejidos %>% 
+    select(locality_c, Clv_Unica, tipo, PROGRAMA, area_ha, -geometry) %>% 
+    glimpse %>% 
+    write_xlsx(path = "/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/thiessen_ejidos.xlsx")
+  

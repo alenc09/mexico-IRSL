@@ -76,26 +76,7 @@ IRSL_full %>%
   left_join(x = thiessen_census_2020, y =., by = "locality_code") %>%
   glimpse -> thiessen_census_2020_IRSL
 
-rowSums(!is.na(st_drop_geometry(thiessen_census_2020_IRSL[,c("IRSL_2000","IRSL_2005","IRSL_2010","IRSL_2020")]))) -> count
 
-thiessen_census_2020_IRSL[count>=2,] -> thiessen_census_2020_IRSL_analysis
-thiessen_census_2020_IRSL_analysis %>% 
-  mutate(across(.cols = GRSL_2000:GRSL_2020, .fns = as.factor),
-         AMBITO = as.factor(AMBITO),
-         viviendas_2020 = as.numeric(viviendas_2020)) %>% 
-  select(locality_code, long_dec, lat_dec, pop_2000:pop_2020, AMBITO, viviendas_2020, GRSL_2000:GRSL_2020) %>% 
-  summary()
-  glimpse
-
-#### missing localities----  
-thiessen_census_2020_IRSL[count<2,] -> thiessen_census_2020_IRSLmiss
-thiessen_census_2020_IRSLmiss %>% 
-  mutate(across(.cols = GRSL_2000:GRSL_2020, .fns = as.factor),
-         AMBITO = as.factor(AMBITO),
-         viviendas_2020 = as.numeric(viviendas_2020)) %>% 
-  select(locality_code, long_dec, lat_dec, pop_2000:pop_2020, AMBITO, viviendas_2020, GRSL_2000:GRSL_2020) %>% 
-  summary()
-  glimpse
   
 ###Ejidos----
 thiessen_ejidos %>% 

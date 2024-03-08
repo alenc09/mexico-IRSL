@@ -76,8 +76,6 @@ IRSL_full %>%
   left_join(x = thiessen_census_2020, y =., by = "locality_code") %>%
   glimpse -> thiessen_census_2020_IRSL
 
-
-  
 ###Ejidos----
 thiessen_ejidos %>% 
     select(locality_c, Clv_Unica, tipo, PROGRAMA, area_ha, -geometry) %>% 

@@ -12,14 +12,15 @@ library(sf)
 #data---sf#data----
 read.dbf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/raw/Statistical/censo_2000/ITER_NALDBF00.dbf", as.is = T) -> localidades_2000
 read.dbf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/raw/Statistical/censo_2000/ITER_NALDBF05.dbf") -> localidades_2005
-read.dbf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/raw/Statistical/censo_2000/ITER_NALDBF10.dbf") -> localidades_2010
-read.csv("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/raw/Statistical/censo_2000/ITER_NALCSV20.csv",
+read.dbf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/raw/Statistical/censo_2010/ITER_NALDBF10 2.dbf", as.is = T) -> localidades_2010
+read.csv("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/raw/Statistical/censo_2000/ITER_NALCSV20.csv", 
          colClasses = c("ENTIDAD" = "factor",
                         "MUN" = "factor",
                         "LOC" = "factor")) -> localidades_2020
 read.csv("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/localities_points/locality_IRSL_points.csv") -> IRSL_full
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/localities_points/localities_2000_ambito.shp") -> localidades_ambito_2000
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/localities_points/localities_2005_ambito.shp") -> localidades_ambito_2005
+read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/localities_points/localities_2010_ambito.shp") -> localidades_ambito_2010
 
 ##organization----
 localidades_2000 %>%
@@ -33,7 +34,7 @@ localidades_2005 %>%
   glimpse -> localidades_pop_2005
 
 localidades_2010 %>% 
-  select(ENTIDAD, MUN, LOC, POBTOT) %>% 
+  dplyr::select(ENTIDAD, MUN, LOC, POBTOT) %>% 
   filter(!LOC == "0000" , !LOC == "9999" , !LOC == "9998") %>% 
   glimpse -> localidades_pop_2010
 
@@ -63,6 +64,12 @@ localidades_ambito_2005 %>%
          .keep = "none") %>% 
   glimpse -> localidades_ambito_2005
 
+localidades_ambito_2010 %>% 
+  mutate(locality_code = str_pad(.$locality_c, width = 9, side = "left", pad = "0"),
+         across(.cols = c("locality_code", "ambito"), .fns = as.factor),
+         .keep = "none") %>% 
+  glimpse -> localidades_ambito_2010
+
 #Analysis----
 ##rural localities----
 localidades_pop_2000 %>% 
@@ -82,6 +89,16 @@ localidades_pop_2005 %>%
   filter(ambito == "rural") %>%
   summarise(total_pop = sum(P_TOTAL)) %>%
   glimpse
+
+localidades_pop_2010 %>% 
+  unite(col = "locality_code", ENTIDAD,MUN,LOC, sep = "") %>%
+  mutate(locality_code = as.factor(locality_code),
+         POBTOT = as.numeric(POBTOT)) %>%
+  left_join(y = localidades_ambito_2010, by = "locality_code") %>%
+  filter(ambito == "rural") %>%
+  summarise(total_pop = sum(POBTOT)) %>%
+  glimpse
+
 
 ##Localities with IRSL----
 rowSums(!is.na(st_drop_geometry(thiessen_census_2020_IRSL[,c("IRSL_2000","IRSL_2005","IRSL_2010","IRSL_2020")]))) -> count

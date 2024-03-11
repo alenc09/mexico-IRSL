@@ -19,6 +19,7 @@ read.csv(file = "/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManche
 read.csv(file = "/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/raw/Statistical/censo_2020/ITER_NALCSV20.csv") -> localities_2020
 read.dbf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/raw/Statistical/censo_2000/ITER_NALDBF00.dbf", as.is = T) -> localidades_2000
 read.dbf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/raw/Statistical/conteo_2005/ITER_NALDBF05.dbf", as.is = T) -> localidades_2005
+read.dbf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/raw/Statistical/censo_2010/ITER_NALDBF10 2.dbf", as.is = T) -> localidades_2010
 
 ##organization----
 # IRSL_1 %>% 
@@ -76,3 +77,16 @@ localidades_2005 %>%
          .keep = "unused") %>%
   glimpse %>% 
   write.csv(file = "/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/statistical/localidades_census_2005.csv", x = .,)
+
+###localities points 2010----
+localidades_2010 %>% 
+  dplyr::select(ENTIDAD, MUN, LOC, LATITUD, LONGITUD) %>% 
+  filter(!LOC == "0000" , !LOC == "9999" , !LOC == "9998") %>%
+  unite(col = "locality_code", ENTIDAD,MUN,LOC, sep = "") %>%
+  mutate(across(.cols = 2:3, .fns = as.numeric),
+         across(.cols = 2:3, .fns = convert_to_decimal_degrees),
+         lat_dec = LATITUD,
+         long_dec = LONGITUD*-1,
+         .keep = "unused") %>%
+  glimpse %>% 
+  write.csv(file = "/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/statistical/localidades_census_2010.csv", x = .,)

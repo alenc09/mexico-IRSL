@@ -22,6 +22,7 @@ read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/localities_points/localities_2005_ambito.shp") -> localidades_ambito_2005
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/localities_points/localities_2010_ambito.shp") -> localidades_ambito_2010
 read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/localities_points/localities_2020_ambito.shp") -> localidades_ambito_2020
+read_sf("/Users/user/Library/CloudStorage/OneDrive-TheUniversityofManchester/SFT/Data/Mexico/clean/GIS/localities_points/localities_2000_ambito_biome.shp") -> localidades_bioma_2000
 
 ##organization----
 localidades_2000 %>%
@@ -76,6 +77,13 @@ localidades_ambito_2020 %>%
   mutate(across(.cols = everything(.), .fns = as.factor)) %>% 
   glimpse -> localidades_ambito_2020
 
+localidades_bioma_2000 %>% 
+  st_drop_geometry() %>%
+  mutate(locality_code = str_pad(.$locality_c, width = 9, side = "left", pad = "0"),
+         locality_code = as.factor(locality_code)) %>% 
+  select(locality_code, ambito, BIOME_NAME, -locality_c) %>% 
+  glimpse() -> localidades_bioma_2000
+
 #Analysis----
 ##rural localities----
 localidades_pop_2000 %>% 
@@ -115,7 +123,15 @@ localidades_pop_2020 %>%
   glimpse
 
 ## Localities in forest biomes----
-
+localidades_pop_2000 %>% 
+  unite(col = "locality_code", ENTIDAD,MUN,LOC, sep = "") %>%
+  mutate(locality_code = as.factor(locality_code),
+         POBTOT = as.numeric(POBTOT)) %>%
+  left_join(y = localidades_bioma_2000, by = "locality_code") %>%
+  filter(grepl("forest", BIOME_NAME, ignore.case = T)) %>%
+  filter(ambito == "rural") %>% 
+  summarise(total_pop = sum(POBTOT)) %>%
+  glimpse
 ##Localities with IRSL----
 rowSums(!is.na(st_drop_geometry(thiessen_census_2020_IRSL[,c("IRSL_2000","IRSL_2005","IRSL_2010","IRSL_2020")]))) -> count
 
